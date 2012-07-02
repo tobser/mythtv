@@ -280,6 +280,7 @@ netvision
 news
 weather
 zoneminder
+teatime
 "
 
 CONFIG_LIST="
@@ -774,6 +775,13 @@ if enabled zoneminder ; then
   echo "SUBDIRS += mythzoneminder" >> ./config.pro
 else
   echo "        MythZoneMinder plugin will not be built"
+fi
+
+if enabled teatime; then
+  echo "        MythTeatime    plugin will be built"
+  echo "SUBDIRS += mythteatime" >> ./config.pro
+else
+  echo "        MythTeatime    plugin will not be built"
 fi
 
 ###########################################################
