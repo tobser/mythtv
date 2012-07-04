@@ -955,7 +955,8 @@ void OSD::DialogQuit(void)
     m_PulsedDialogText = QString();
 }
 
-void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
+void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
+        const QString &confirmationData)
 {
     if (m_Dialog)
     {
@@ -999,7 +1000,10 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
                 if (cbox)
                 {
                     cbox->SetReturnEvent(m_ParentObject, window);
-                    cbox->SetData("DIALOG_CONFIRM_X_X");
+                    if (!confirmationData.isEmpty() && confirmationData.contains("_"))
+                        cbox->SetData(QString("DIALOG_CONFIRM_%1").arg(confirmationData));
+                    else
+                        cbox->SetData("DIALOG_CONFIRM_X_X");
                 }
                 m_Children.insert(window, m_Dialog);
             }
