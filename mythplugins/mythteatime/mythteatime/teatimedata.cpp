@@ -45,8 +45,13 @@ void TeaTimeData::done()
     // popup
     QString notifyText =  gCoreContext->GetSetting("Teatime_NotificationText", 
                                                     tr("Tea is ready!"));
+    bool pause =  gCoreContext->GetSetting("Teatime_PausePlayback", 
+                                                    "1") == "1";
+ 
     QStringList sl ;
-    sl << "pauseplayback"; // this only works with a patched mythtv
+    if (pause)
+        sl << "pauseplayback"; 
+
     MythEvent* me = new MythEvent(MythEvent::MythUserMessage, notifyText, sl);
     QCoreApplication::instance()->postEvent(m_MainWindow, me);
 
