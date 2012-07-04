@@ -7,6 +7,7 @@
 #include <mythscreentype.h>
 #include <mythuibutton.h>
 #include <mythuitextedit.h>
+#include <mythuicheckbox.h>
 
 class TeaTimerSettings: public  MythScreenType
 {
@@ -23,6 +24,7 @@ class TeaTimerSettings: public  MythScreenType
         MythUIButton    *m_CancelButton;
         MythUIButton    *m_OkButton;
         MythUITextEdit  *m_NotifyText;
+        MythUICheckBox  *m_PausePlayback;
 
 
 };
