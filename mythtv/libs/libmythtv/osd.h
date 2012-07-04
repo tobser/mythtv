@@ -167,7 +167,7 @@ class OSD
     bool DialogHandleKeypress(QKeyEvent *e);
     void DialogQuit(void);
     void DialogShow(const QString &window, const QString &text = "",
-                    int updatefor = 0);
+                    int updatefor = 0, const QString  &confirmationData ="");
     void DialogSetText(const QString &text);
     void DialogBack(QString text = "", QVariant data = 0, bool exit = false);
     void DialogAddButton(QString text, QVariant data,

@@ -8713,20 +8713,35 @@ void TV::customEvent(QEvent *e)
             return;
 
         uint timeout = 0;
+        bool pausePlayback = false;
         if (me->ExtraDataCount() == 1)
         {
             uint t = me->ExtraData(0).toUInt();
             if (t > 0 && t < 1000)
                 timeout = t * 1000;
+
+            if (t == 0 && me->ExtraData(0).contains("pauseplayback"))
+                pausePlayback = true;
         }
 
         if (timeout > 0)
             message += " (%d)";
 
+
         PlayerContext *mctx = GetPlayerReadLock(0, __FILE__, __LINE__);
+
+        QString confirmationData;
+        if (pausePlayback && !ContextIsPaused(mctx, __FILE__, __LINE__))
+        {
+            gTV->NormalSpeed(mctx);
+            gTV->StopFFRew(mctx);
+            gTV->DoTogglePause(mctx, false);
+            confirmationData = "RESUME_PLAYBACK";
+        }
+
         OSD *osd = GetOSDLock(mctx);
         if (osd)
-            osd->DialogShow(OSD_DLG_CONFIRM, message, timeout);
+            osd->DialogShow(OSD_DLG_CONFIRM, message, timeout, confirmationData);
         ReturnOSDLock(mctx, osd);
         ReturnPlayerLock(mctx);
 
@@ -8753,6 +8768,7 @@ void TV::customEvent(QEvent *e)
     {
         DialogCompletionEvent *dce =
             reinterpret_cast<DialogCompletionEvent*>(e);
+
         OSDDialogEvent(dce->GetResult(), dce->GetResultText(),
                        dce->GetData().toString());
         return;
@@ -10171,6 +10187,9 @@ void TV::OSDDialogEvent(int result, QString text, QString action)
         }
         else if (valid && desc[0] == "CONFIRM")
         {
+            if (desc[1] == "RESUME" && desc[2] == "PLAYBACK")
+                if (ContextIsPaused(actx, __FILE__, __LINE__))
+                    gTV->DoTogglePause(actx, false);
         }
         else
         {
