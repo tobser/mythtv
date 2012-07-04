@@ -967,7 +967,8 @@ void OSD::DialogQuit(void)
     m_PulsedDialogText = QString();
 }
 
-void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
+void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
+        const QString &confirmationData)
 {
     if (m_Dialog)
     {
@@ -990,7 +991,7 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
     {
         OverrideUIScale();
         MythScreenType *dialog;
-        
+
         if (window == OSD_DLG_EDITOR)
             dialog = new ChannelEditor(m_ParentObject, window.toLatin1());
         else if (window == OSD_DLG_CONFIRM)
@@ -999,7 +1000,22 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
             dialog = new MythDialogBox(text, NULL, window.toLatin1(), false, true);
 
         dialog->SetPainter(m_CurrentPainter);
-        if (dialog->Create())
+        if (!dialog->Create())
+        {
+            RevertUIScale();
+            delete dialog;
+            return;
+        }
+
+        PositionWindow(dialog);
+        m_Dialog = dialog;
+        
+        MythDialogBox *dbox = dynamic_cast<MythDialogBox*>(m_Dialog);
+        if (dbox)
+            dbox->SetReturnEvent(m_ParentObject, window);
+
+        MythConfirmationDialog *cbox = dynamic_cast<MythConfirmationDialog*>(m_Dialog);
+        if (cbox)
         {
             PositionWindow(dialog);
             m_Dialog = dialog;
@@ -1010,30 +1026,25 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
             if (cbox)
             {
                 cbox->SetReturnEvent(m_ParentObject, window);
-                cbox->SetData("DIALOG_CONFIRM_X_X");
+                if (!confirmationData.isEmpty() && confirmationData.contains("_"))
+                    cbox->SetData(QString("DIALOG_CONFIRM_%1").arg(confirmationData));
+                else
+                    cbox->SetData("DIALOG_CONFIRM_X_X");
             }
             m_Children.insert(window, m_Dialog);
         }
-        else
+
+        if (updatefor)
         {
-            RevertUIScale();
-            delete dialog;
-            return;
+            m_NextPulseUpdate  = MythDate::current();
+            m_PulsedDialogText = text;
+            SetExpiry(window, kOSDTimeout_None, updatefor);
         }
-            
-        RevertUIScale();
-    }
 
-    if (updatefor)
-    {
-        m_NextPulseUpdate  = MythDate::current();
-        m_PulsedDialogText = text;
-        SetExpiry(window, kOSDTimeout_None, updatefor);
+        DialogBack();
+        HideAll(true, m_Dialog);
+        m_Dialog->SetVisible(true);
     }
-
-    DialogBack();
-    HideAll(true, m_Dialog);
-    m_Dialog->SetVisible(true);
 }
 
 void OSD::DialogSetText(const QString &text)
