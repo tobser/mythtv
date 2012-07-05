@@ -2069,7 +2069,7 @@ bool Scheduler::HandleReschedule(void)
         LOG(VB_GENERAL, LOG_INFO, "Reschedule interrupted, will retry");
         m_queueLock.lock();
         reschedQueue.enqueue(0);
-        m_queueLock.lock();
+        m_queueLock.unlock();
         return false;
     }
 
