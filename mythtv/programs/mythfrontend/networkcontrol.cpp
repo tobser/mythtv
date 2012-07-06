@@ -288,6 +288,8 @@ void NetworkControl::processNetworkControlCommand(NetworkCommand *nc)
         result = processHelp(nc);
     else if (is_abbrev("message", nc->getArg(0)))
         result = processMessage(nc);
+    else if (is_abbrev("message_pause", nc->getArg(0)))
+        result = processMessage(nc);
     else if ((nc->getArg(0).toLower() == "exit") || (nc->getArg(0).toLower() == "quit"))
         QCoreApplication::postEvent(this,
                                 new NetworkControlCloseEvent(nc->getClient()));
@@ -1169,6 +1171,11 @@ QString NetworkControl::processHelp(NetworkCommand *nc)
         helpText +=
             "message               - Displays a simple text message popup\r\n";
     }
+    else if (is_abbrev("message_pause", command))
+    {
+        helpText +=
+            "message_pause         - Displays a text message popup and pauses video playback\r\n";
+    }
 
     if (!helpText.isEmpty())
         return helpText;
@@ -1186,6 +1193,7 @@ QString NetworkControl::processHelp(NetworkCommand *nc)
         "set                - Changes\r\n"
         "screenshot         - Capture screenshot\r\n"
         "message            - Display a simple text message\r\n"
+        "message_pause      - Same as 'message' but pauses video playback\r\n";
         "exit               - Exit Network Control\r\n"
         "\r\n"
         "Type 'help COMMANDNAME' for help on any specific command.\r\n";
@@ -1199,9 +1207,24 @@ QString NetworkControl::processMessage(NetworkCommand *nc)
         return QString("ERROR: See 'help %1' for usage information")
                        .arg(nc->getArg(0));
 
-    QString message = nc->getCommand().remove(0, 7).trimmed();
+    QString message;
+    bool pause = false;
+    if (is_abbrev("message", nc->getArg(0))){
+        message = nc->getCommand().remove(0, 7).trimmed();
+    }
+    else if (is_abbrev("message_pause", nc->getArg(0))){
+        message = nc->getCommand().remove(0, 14).trimmed();
+        pause = true;
+    }
+
     MythMainWindow *window = GetMythMainWindow();
-    MythEvent* me = new MythEvent(MythEvent::MythUserMessage, message);
+    QStringList extraData;
+    if (pause)
+    {
+        extraData << "pauseplayback";
+    }
+
+    MythEvent* me = new MythEvent(MythEvent::MythUserMessage, message, extraData);
     qApp->postEvent(window, me);
     return QString("OK");
 }
