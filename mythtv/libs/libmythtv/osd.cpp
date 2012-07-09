@@ -1035,6 +1035,7 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
 
             RevertUIScale();
         }
+    }
 
     if (updatefor)
     {
