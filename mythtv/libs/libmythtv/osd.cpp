@@ -1024,17 +1024,17 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
                     else
                         cbox->SetData("DIALOG_CONFIRM_X_X");
                 }
-                m_Children.insert(window, m_Dialog);
             }
-            else
-            {
-                RevertUIScale();
-                delete dialog;
-                return;
-            }
-
-            RevertUIScale();
+            m_Children.insert(window, m_Dialog);
         }
+        else
+        {
+            RevertUIScale();
+            delete dialog;
+            return;
+        }
+
+        RevertUIScale();
     }
 
     if (updatefor)
