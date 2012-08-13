@@ -51,6 +51,7 @@ class EITFixUp
         kFixNO         = 0x10000,
         kFixNRK_DVBT   = 0x20000,
         kFixDish       = 0x40000,
+	kFixDeKabelBw  = 0x80000,
 
         // Early fixups
         kEFixForceISO8859_1  = 0x2000,
@@ -90,6 +91,10 @@ class EITFixUp
     void FixCategory(DBEventEIT &event) const;      // Generic Category fixes
     void FixNO(DBEventEIT &event) const;            // Norwegian DVB-S
     void FixNRK_DVBT(DBEventEIT &event) const;      // Norwegian NRK DVB-T
+
+    void FixDeKabelBW(DBEventEIT &event) const;   // fix german DVB-C Kabel BW
+    void FixDeKabelBWGetEpisode(QString &subToFix, QString &episode, QString &totalEpisodes,QString &year, bool remove = true) const;   // fix german DVB-C Kabel BW
+    void FixDeKabelBWPresenter(QString &subToFix, QStringList &presenters) const;
 
     static QString AddDVBEITAuthority(uint chanid, const QString &id);
 
@@ -194,6 +199,11 @@ class EITFixUp
     const QRegExp m_noNRKCategories;
     const QRegExp m_noPremiere;
     const QRegExp m_Stereo;
+    const QRegExp m_deKabelBwModeration;
+    const QRegExp m_deKabelBwSubtitle;
+    const QRegExp m_deKabelBwTerraX;
+    const QRegExp m_deCountryNames;
+
 };
 
 #endif // EITFIXUP_H
