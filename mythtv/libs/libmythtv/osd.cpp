@@ -1025,11 +1025,20 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
             MythConfirmationDialog *cbox = dynamic_cast<MythConfirmationDialog*>(m_Dialog);
             if (cbox)
             {
-                cbox->SetReturnEvent(m_ParentObject, window);
-                if (!confirmationData.isEmpty() && confirmationData.contains("_"))
-                    cbox->SetData(QString("DIALOG_CONFIRM_%1").arg(confirmationData));
-                else
-                    cbox->SetData("DIALOG_CONFIRM_X_X");
+                PositionWindow(dialog);
+                m_Dialog = dialog;
+                MythDialogBox *dbox = dynamic_cast<MythDialogBox*>(m_Dialog);
+                if (dbox)
+                    dbox->SetReturnEvent(m_ParentObject, window);
+                MythConfirmationDialog *cbox = dynamic_cast<MythConfirmationDialog*>(m_Dialog);
+                if (cbox)
+                {
+                    cbox->SetReturnEvent(m_ParentObject, window);
+                    if (!confirmationData.isEmpty() && confirmationData.contains("_"))
+                        cbox->SetData(QString("DIALOG_CONFIRM_%1").arg(confirmationData));
+                    else
+                        cbox->SetData("DIALOG_CONFIRM_X_X");
+                }
             }
             m_Children.insert(window, m_Dialog);
         }
@@ -1040,6 +1049,7 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
             m_PulsedDialogText = text;
             SetExpiry(window, kOSDTimeout_None, updatefor);
         }
+    }
 
         DialogBack();
         HideAll(true, m_Dialog);

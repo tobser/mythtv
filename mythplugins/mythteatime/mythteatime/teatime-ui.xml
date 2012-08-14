@@ -78,15 +78,28 @@
             <fill color="Green" alpha="30" />
         </shape>
 
-        <textarea name="notificationDescr">
-            <area>320,180,600,150</area>
+        <textarea name="pause_playbackDesc">
+            <area>380,250,560,40</area>
             <cutdown>yes</cutdown>
             <font>basesmall</font>
-            <align>allcenter</align>
+            <align>left, vcenter</align>
+            <value>Pause if notified while watching TV</value>
+        </textarea>
+
+        <checkbox name="pause_playback" from="basecheckbox" >
+            <position>340,250</position>
+        </checkbox>
+
+        <textarea name="notificationDescr">
+            <area>340,310,600,40</area>
+            <cutdown>yes</cutdown>
+            <font>basesmall</font>
+            <align>left, vcenter</align>
             <value>Text displayed in notification popup:</value>
         </textarea>
+
         <textedit name="notification_message" from="basetextedit">
-            <position>450,330</position>
+            <position>340,370</position>
         </textedit>
 
         <button name="ok" from="basebutton">
