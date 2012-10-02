@@ -967,7 +967,8 @@ void OSD::DialogQuit(void)
     m_PulsedDialogText = QString();
 }
 
-void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
+void OSD::DialogShow(const QString &window, const QString &text, int updatefor,
+        const QString &confirmationData)
 {
     if (m_Dialog)
     {
@@ -999,36 +1000,40 @@ void OSD::DialogShow(const QString &window, const QString &text, int updatefor)
             dialog = new MythDialogBox(text, NULL, window.toLatin1(), false, true);
 
         dialog->SetPainter(m_CurrentPainter);
-        if (dialog->Create())
-        {
-            PositionWindow(dialog);
-            m_Dialog = dialog;
-            MythDialogBox *dbox = dynamic_cast<MythDialogBox*>(m_Dialog);
-            if (dbox)
-                dbox->SetReturnEvent(m_ParentObject, window);
-            MythConfirmationDialog *cbox = dynamic_cast<MythConfirmationDialog*>(m_Dialog);
-            if (cbox)
-            {
-                cbox->SetReturnEvent(m_ParentObject, window);
-                cbox->SetData("DIALOG_CONFIRM_X_X");
-            }
-            m_Children.insert(window, m_Dialog);
-        }
-        else
+        if (!dialog->Create())
         {
             RevertUIScale();
             delete dialog;
             return;
         }
 
-        RevertUIScale();
-    }
+        PositionWindow(dialog);
+        m_Dialog = dialog;
 
-    if (updatefor)
-    {
-        m_NextPulseUpdate  = MythDate::current();
-        m_PulsedDialogText = text;
-        SetExpiry(window, kOSDTimeout_None, updatefor);
+        MythDialogBox *dbox = dynamic_cast<MythDialogBox*>(m_Dialog);
+        if (dbox)
+            dbox->SetReturnEvent(m_ParentObject, window);
+
+        MythConfirmationDialog *cbox = dynamic_cast<MythConfirmationDialog*>(m_Dialog);
+        if (cbox)
+        {
+            cbox->SetReturnEvent(m_ParentObject, window);
+            if (!confirmationData.isEmpty() && confirmationData.contains("_"))
+                cbox->SetData(QString("DIALOG_CONFIRM_%1").arg(confirmationData));
+            else
+                cbox->SetData("DIALOG_CONFIRM_X_X");
+
+        }
+
+        m_Children.insert(window, m_Dialog);
+        RevertUIScale();
+
+        if (updatefor)
+        {
+            m_NextPulseUpdate  = MythDate::current();
+            m_PulsedDialogText = text;
+            SetExpiry(window, kOSDTimeout_None, updatefor);
+        }
     }
 
     DialogBack();

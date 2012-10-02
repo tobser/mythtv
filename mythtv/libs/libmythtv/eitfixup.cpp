@@ -9,6 +9,7 @@
 #include "programinfo.h" // for subtitle types and audio and video properties
 #include "dishdescriptors.h" // for dish_theme_type_to_string
 
+#include "mythlogging.h"
 /*------------------------------------------------------------------------
  * Event Fix Up Scripts - Turned on by entry in dtv_privatetype table
  *------------------------------------------------------------------------*/
@@ -121,10 +122,172 @@ EITFixUp::EITFixUp()
                         "NRK2s historiekveld|Detektimen|Nattkino|Filmklassiker|Film|Kortfilm|P.skemorg[eo]n|"
                         "Radioteatret|Opera|P2-Akademiet|Nyhetsmorg[eo]n i P2 og Alltid Nyheter:): (.+)"),
       m_noPremiere("\\s+-\\s+(Sesongpremiere|Premiere|premiere)!?$"),
-      m_Stereo("\\b\\(?[sS]tereo\\)?\\b")
-
+      m_Stereo("\\b\\(?[sS]tereo\\)?\\b"),
+      m_deKabelBwModeration("(\\W+-\\W+|\\W+/\\W+)?(Moderation:?|Präsentiert von ) (.*($|.|:))"),
+      m_deKabelBwSubtitle("(^.*)(: | - )(.*)$"),
+      m_deKabelBwTerraX("(^Terra X\\S*):?(.*)"),
+      m_deCountryNames("Afghanistan|Albanien|Algerien|Andorra|Angola|Antarktis|Antigua und Barbuda|Argentinien|Armenien|Aserbaidschan|Australien|Bahamas|Bahrain|Bangladesch|Barbados|Belarus|Belgien|Belize|Benin|Bhutan|Birma|Bolivien|Bosnien und Herzegowina|Botsuana|Brasilien|Brunei|Bulgarien|Burkina Faso|Burundi|Chile|China|Cookinseln|Costa Rica|Demokratische Republik Kongo|Deutschland|Dominica|Dominikanische Republik|Dschibuti|Dänemark|Ecuador|El Salvador|Elfenbeinküste|Eritrea|Estland|Falklandinseln|Fidschi|Finnland|Frankreich|Französisch Guayana|Föderierte Staaten von Mikronesien|Gabun|Gambia|Georgien|Ghana|Grenada|Griechenland|Großbritannien|Guatemala|Guinea|Guinea-Bissau|Guyana|Haiti|Honduras|Indien|Indonesien|Irak|Iran|Irland|Island|Israel|Italien|Jamaika|Japan|Jemen|Jordanien|Kambodscha|Kamerun|Kanada|Kap Verde|Kasachstan|Katar|Kenia|Kirgisistan|Kiribati|Kolumbien|Komoren|Kongo \\(Demokratische Republik\\)|Kongo \\(Republik\\)|Kongo|Kosovo|Kroatien|Kuba|Kuwait|Laos|Lesotho|Lettland|Libanon|Liberia|Libyen|Liechtenstein|Litauen|Luxemburg|Madagaskar|Malawi|Malaysia|Malediven|Mali|Malta|Marokko|Marshallinseln|Mauretanien|Mauritius|Mazedonien|Mexiko|Mikronesien|Moldawien|Monaco|Mongolei|Montenegro|Mosambik|Myanmar|Namibia|Nauru|Nepal|Neuseeland|Nicaragua|Niederlande|Niger|Nigeria|Nordkorea|Nordzypern|Norwegen|Oman|Pakistan|Palau|Palästina|Panama|Papua-Neuguinea|Paraguay|Peru|Philippinen|Polen|Portugal|Republik Kongo|Ruanda|Rumänien|Russland|Sahara|Sahara \\(Staat\\)|Saint Kitts und Nevis|Saint Lucia|Saint Vincent und die Grenadinen|Salomonen|Sambia|Samoa|San Marino|Saudi-Arabien|Schweden|Schweiz|Senegal|Serbien|Seychellen|Sierra Leone|Simbabwe|Singapur|Slowakei|Slowenien|Somalia|Spanien|Sri Lanka|Sudan|Surinam|Svalbard|Swasiland|Syrien|São Tomé und Príncipe|Südafrika|Südkorea|Südsudan|Tadschikistan|Taiwan|Tansania|Thailand|Timor-Leste|Togo|Tonga|Trinidad und Tobago|Tschad|Tschechien|Tunesien|Turkmenistan|Tuvalu|Türkei|USA|Uganda|Ukraine|Ungarn|Uruguay|Usbekistan|Vanuatu|Vatikan|Venezuela|Vereinigte Arabische Emirate|Vereinigte Staaten von Amerika|Vereinigtes Königreich|Vietnam|Weißrussland|Westsahara|Zentralafrikanische Republik|Zypern|Ägypten|Äquatorialguinea|Äthiopien|Österreich")
 {
 }
+
+void EITFixUp::FixDeKabelBW ( DBEventEIT& event ) const
+{
+    QString ch =  QString("FIX %1 ").arg(event.chanid) ;
+    QString orgDesc = event.description;
+    QString in(ch + QString("IN  : TITLE='" + event.title + "' SUBTITLE='"+ event.subtitle+"' E: %1").arg(event.partnumber) );
+    QString t_orig = event.title;
+    QString s_orig = event.subtitle;
+    int    e_orig = event.partnumber;
+
+
+    QString subtFromTitle;
+
+    // Terra X|XXL|Xpress ...
+    int pos = m_deKabelBwTerraX.indexIn(event.title);
+    if (pos > -1)
+    {
+        event.title = m_deKabelBwTerraX.cap(1).trimmed();
+        subtFromTitle = m_deKabelBwTerraX.cap(2).trimmed();
+    }
+
+    // consider all befor ':' or '-' as the title
+    pos = m_deKabelBwSubtitle.indexIn(event.title);
+    QString sep;
+    if ( pos > -1 )
+    {
+        event.title = m_deKabelBwSubtitle.cap(1).trimmed();
+        sep = m_deKabelBwSubtitle.cap(2);
+        subtFromTitle = m_deKabelBwSubtitle.cap(3).trimmed();
+    }
+
+    // extract prestenters:
+    QStringList presenters;
+    FixDeKabelBWPresenter(subtFromTitle, presenters);
+    FixDeKabelBWPresenter(event.subtitle, presenters);
+    FixDeKabelBWPresenter(event.description, presenters);
+    // add presenters:
+    QString presLog;
+    for(int i = 0; i < presenters.size() ; ++i)
+    {
+        event.AddPerson(DBPerson::kPresenter,presenters.at(i).trimmed());
+        presLog += presenters.at(i) +"| ";
+    }
+
+    // episode XX
+    QString episode,total,year;
+    FixDeKabelBWGetEpisode(event.title, episode, total, year);
+    FixDeKabelBWGetEpisode(subtFromTitle, episode, total, year);
+    FixDeKabelBWGetEpisode(event.subtitle, episode, total, year);
+    FixDeKabelBWGetEpisode(event.description, episode, total, year, false);
+
+    if (event.subtitle.isEmpty()){
+        event.subtitle = subtFromTitle;
+    }
+    else
+    {
+        if (! subtFromTitle.isEmpty()){
+            if (!event.subtitle.contains(subtFromTitle))
+                event.title += (sep.isEmpty()? " - ": sep) + subtFromTitle;
+            else
+                event.subtitle = subtFromTitle + " - " + event.subtitle;
+        }
+    }
+
+    if (!episode.isEmpty())
+    {
+        event.partnumber = episode.toUInt();
+        if (total.isEmpty())
+            episode = "("+episode+")";
+        else
+            episode = "("+episode+"/"+total+")";
+
+        event.subtitle = QString(episode + " " + event.subtitle.trimmed()).trimmed();
+    }
+
+    if (!year.isEmpty())
+      event.originalairdate.setDate(year.toInt(),0,0);
+
+
+    if( t_orig != event.title || s_orig != event.subtitle || e_orig != event.partnumber || presLog != "" || year != "")
+    {
+        LOG(VB_GENERAL, LOG_INFO, in );
+        LOG(VB_GENERAL, LOG_INFO, ch + QString("OUT : TITLE='" + event.title
+                    + "' SUBTITLE='"+ event.subtitle+"' E: %1 - "+ total).arg(event.partnumber)
+                    + " P:" +presLog +" D: " + event.originalairdate.toString());
+    }
+
+    QRegExp remSub("^("+ event.subtitle +")(.*)$:w");
+    if (remSub.indexIn(event.description) > -1)
+    {
+        event.description = remSub.cap(2);
+    }
+
+    QRegExp remRepead("\\(?(Wh\\.|Wdh\\.|Wiederholung)( vo[nm] .*Uhr)?\\)?", Qt::CaseInsensitive);
+    if (remRepead.indexIn(event.description) > -1 )
+    {
+        event.previouslyshown = true;
+        event.description = event.description.remove(remRepead);
+    }
+
+    // remove leftover crap like Stereo, Widescreen... between brackets
+    QRegExp remCrap("\\(.*\\)$");
+    remCrap.setMinimal(true);
+    if (remCrap.indexIn(event.description) > -1)
+    {
+        event.description = event.description.remove(remCrap);
+    }
+
+    LOG(VB_GENERAL, LOG_INFO, ch + "In  D: '" +  orgDesc +"'");
+    LOG(VB_GENERAL, LOG_INFO, ch + "OUT D: '"+ event.description +"'");
+}
+
+void EITFixUp::FixDeKabelBWPresenter(QString &subToFix, QStringList &presenters) const
+{
+    int pos = m_deKabelBwModeration.indexIn(subToFix);
+    if (pos > -1)
+    {
+        presenters = m_deKabelBwModeration.cap(3).split(",");
+        subToFix= subToFix.replace(m_deKabelBwModeration, "");
+    }
+}
+
+void EITFixUp::FixDeKabelBWGetEpisode ( QString& subToFix, QString& episode, QString& totalEpisodes, QString &year, bool remove) const
+{
+    QRegExp epis0("\\((\\d+)(\\D*/\\D*(\\d+))?\\)");
+
+    int pos = epis0.indexIn(subToFix);
+    if (pos > -1)
+    {
+      episode = epis0.cap(1);
+      if (!epis0.cap(3).isEmpty())
+          totalEpisodes = epis0.cap(3);
+
+      subToFix = subToFix.replace(epis0,"").trimmed();
+    }
+    else{
+      QRegExp epis1("(Episode|Folge)(:| )*(\\d+)(\\W*(von|/)\\W*(\\d+))?");
+      pos = epis1.indexIn(subToFix);
+      if (pos > -1)
+      {
+	        episode = epis1.cap(3);
+            if (!epis1.cap(6).isEmpty())
+                totalEpisodes = epis1.cap(6);
+
+            if (remove)
+                subToFix = subToFix.replace(epis1,"").trimmed();
+      }
+    }
+
+    QRegExp film("(\\S*Film|Drama|Thriller|Komödie|Serie|Science-Fiction).*(\\d{4})(\\W+-\\W+)?", Qt::CaseInsensitive);
+    film.setMinimal(true);
+    if (film.indexIn(subToFix) > -1 )
+    {
+        year = film.cap(2);
+        subToFix = subToFix.remove(film).trimmed();
+    }
+}
+
+
 
 void EITFixUp::Fix(DBEventEIT &event) const
 {
@@ -184,6 +347,9 @@ void EITFixUp::Fix(DBEventEIT &event) const
 
     if (kFixCategory & event.fixup)
         FixCategory(event);
+
+    if (kFixDeKabelBw & event.fixup)
+        FixDeKabelBW(event);
 
     if (event.fixup)
     {

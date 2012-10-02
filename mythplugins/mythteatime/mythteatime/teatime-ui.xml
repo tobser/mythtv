@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mythuitheme>
+    <window name="teatime">
+        <area>0,0,100%,100%</area>
+        <shape name="background">
+            <area>320,180,640,360</area>
+            <type>roundbox</type> 
+            <cornerradius>10</cornerradius>
+            <line color="#FFFFFF" alpha="255" width="1" /> 
+            <fill color="Green" alpha="30" />
+        </shape>
+
+        <textarea name="infotext">
+            <area>320,180,640,230</area>
+            <font>basesmall</font>
+            <cutdown>yes</cutdown>
+            <multiline>yes</multiline>
+            <align>allcenter</align>
+        </textarea>
+
+        <spinbox name="time_span">
+            <area>340,370,600,40</area>
+            <layout>horizontal</layout>
+            <statetype name="buttonitem">
+                <area>0,40,600,40</area>
+                <state name="active">
+                    <area>0,0,600,40</area>
+                    <shape name="spanbackground">
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type> 
+                        <cornerradius>10</cornerradius>
+                        <line color="#FFFFFF" alpha="255" width="1" /> 
+                        <fill color="Red" alpha="30" />
+                    </shape>
+                    <textarea name="buttontext">
+                        <area>5,5,600,30</area>
+                        <cutdown>yes</cutdown>
+                        <font>basesmall</font>
+                        <align>allcenter</align>
+                        <template>%1 Minute(s)</template>
+                    </textarea>
+                </state>
+                <state name="selectedactive" from="active" >
+                    <shape name="spanbackground">
+                        <area>0,0,100%,100%</area>
+                        <type>roundbox</type> 
+                        <cornerradius>10</cornerradius>
+                        <fill style="gradient">
+                            <gradient start="#52CA38" end="#349838" alpha="255" />
+                        </fill>
+                    </shape>
+                </state>
+                <state name="selectedinactive" from="active" />
+            </statetype>
+        </spinbox>
+        <button name="ok" from="basebutton">
+            <area>400,460,120,40</area>
+            <value>Ok</value>
+        </button>
+        <button name="cancel" from="basebutton">
+            <area>560,460,120,40</area>
+            <value>Cancel</value>
+        </button>
+        <button name="setup" from="basebutton">
+            <area>720,460,120,40</area>
+            <value>Setup</value>
+        </button>
+
+    </window>
+
+    <window name="teatimesettings">
+        <area>0,0,100%,100%</area>
+        <shape name="background">
+            <area>320,180,640,360</area>
+            <type>roundbox</type> 
+            <cornerradius>10</cornerradius>
+            <line color="#FFFFFF" alpha="255" width="1" /> 
+            <fill color="Green" alpha="30" />
+        </shape>
+
+        <textarea name="pause_playbackDesc">
+            <area>380,250,560,40</area>
+            <cutdown>yes</cutdown>
+            <font>basesmall</font>
+            <align>left, vcenter</align>
+            <value>Pause if notified while watching TV</value>
+        </textarea>
+
+        <checkbox name="pause_playback" from="basecheckbox" >
+            <position>340,250</position>
+        </checkbox>
+
+        <textarea name="notificationDescr">
+            <area>340,310,600,40</area>
+            <cutdown>yes</cutdown>
+            <font>basesmall</font>
+            <align>left, vcenter</align>
+            <value>Text displayed in notification popup:</value>
+        </textarea>
+
+        <textedit name="notification_message" from="basetextedit">
+            <position>340,370</position>
+        </textedit>
+
+        <button name="ok" from="basebutton">
+            <area>500,460,120,40</area>
+            <value>Ok</value>
+        </button>
+        <button name="cancel" from="basebutton">
+            <area>660,460,120,40</area>
+            <value>Cancel</value>
+        </button>
+    </window>
+</mythuitheme>

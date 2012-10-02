@@ -982,4 +982,57 @@ static void init_fixup(QMap<uint64_t,uint> &fix)
         fix[ 1094LL << 32 | 1 << 16 | 17028 ] = // NT1
         fix[ 1100LL << 32 | 1 << 16 |  8710 ] = // NRJ 12
         EITFixUp::kEFixForceISO8859_15;
+	
+   // transport_id<<32 | netword_id<<16 | service_id
+        fix[ 40984U << 16| 12003 ] = // RTL
+            fix[ 41985U << 16| 28111 ] = // "WDR Köln"
+            fix[ 41985U << 16| 28113 ] = // "SWR Fernsehen BW"
+            fix[ 41985U << 16| 28226 ] = // "NDR FS NDS"
+            fix[ 41985U << 16| 28227 ] = // "NDR FS SH"
+            fix[ 41985U << 16| 28228 ] = // "MDR Sachsen"
+            fix[ 41985U << 16| 28229 ] = // "MDR S-Anhalt"
+            fix[ 41985U << 16| 28230 ] = // "MDR Thüringen"
+            fix[ 41985U << 16| 28231 ] = // "SWR Fernsehen RP"
+            fix[ 40984U << 16| 17504 ] = // sixx
+            fix[ 41985U << 16| 28487 ] = // BR-alpha
+            fix[ 40984U << 16| 17500 ] = // "SAT 1"
+            fix[ 41985U << 16| 28110 ] = // "Bayerisches FS Nord"
+            fix[ 41985U << 16| 28108 ] = // hr-fernsehen
+            fix[ 41985U << 16| 28107 ] = // "Bayerisches FS Süd"
+            fix[ 41985U << 16| 28106 ] = // "Das Erste"
+            fix[ 41985U << 16| 28225 ] = // "NDR FS HH"
+            fix[ 41985U << 16| 28224 ] = // "NDR FS MV"
+            fix[ 41985U << 16| 28206 ] = // "rbb Berlin"
+            fix[ 41985U << 16| 28205 ] = // "rbb Brandenburg"
+            fix[ 41985U << 16| 28725 ] = // PHOENIX
+            fix[ 41985U << 16| 28724 ] = // arte
+            fix[ 41985U << 16| 28723 ] = // EinsPlus
+            fix[ 41985U << 16| 28722 ] = // Einsfestival
+            fix[ 41985U << 16| 28721 ] = // EinsExtra
+            fix[ 41985U << 16| 11100 ] = // "Das Erste HD"
+            fix[ 40984U << 16| 17503 ] = // N24
+            fix[ 40984U << 16| 17502 ] = // "kabel eins"
+            fix[ 40984U << 16| 17501 ] = // ProSieben
+            fix[ 1U << 16| 11110 ] = // "ZDF HD"
+            fix[ 1U << 16| 28006 ] = // ZDF
+            fix[ 1U << 16| 28007 ] = // 3sat
+            fix[ 1U << 16| 28008 ] = // KIKA
+            fix[ 1U << 16| 28011 ] = // ZDFinfokanal
+            fix[ 1U << 16| 28014 ] = // zdf_neo
+            fix[ 1U << 16| 28016 ] = // zdf.kultur
+            fix[ 40984U << 16| 22430 ] = // "TV Suedbaden"
+            fix[ 40984U << 16| 22000 ] = // DMAX
+            fix[ 40984U << 16| 22006 ] = // "TELE 5"
+            fix[ 40984U << 16| 22007 ] = // "DAS VIERTE"
+            fix[ 40984U << 16| 22029 ] = // "ANIXE HD"
+            fix[ 40984U << 16| 22033 ] = // sixx
+            fix[ 40984U << 16| 22154 ] = // ServusTV
+            fix[ 40984U << 16| 22166 ] = // "ANIXE SD"
+            fix[ 40984U << 16| 22182 ] = // VIVA
+            fix[ 40984U << 16| 22263 ] = // SF1
+            fix[ 40984U << 16| 22264 ] = // SF2
+            fix[ 40984U << 16| 22297 ] = // "ServusTV HD"
+                    EITFixUp::kFixDeKabelBw;
+
+            fix[ 40984U << 16| 22007 ] |=  EITFixUp::kEFixForceISO8859_15; // "DAS VIERTE"
 }
