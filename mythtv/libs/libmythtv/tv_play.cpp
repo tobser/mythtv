@@ -10997,7 +10997,7 @@ void TV::FillOSDMenuSubtitles(const PlayerContext *ctx, OSD *osd,
             osd->DialogAddButton(tr("Disable Subtitles"), ACTION_DISABLESUBS);
         else if (have_subs && !enabled)
             osd->DialogAddButton(tr("Enable Subtitles"), ACTION_ENABLESUBS);
-        if (!av_tracks.empty())
+        if (!av_tracks.empty() || !text_tracks.empty())
         {
             if (forcedon)
             {
@@ -11009,9 +11009,10 @@ void TV::FillOSDMenuSubtitles(const PlayerContext *ctx, OSD *osd,
                 osd->DialogAddButton(tr("Enable Forced Subtitles"),
                                      ACTION_ENABLEFORCEDSUBS);
             }
-            osd->DialogAddButton(tr("Select Subtitle"),
-                                 "DIALOG_MENU_AVSUBTITLES_0",
-                                 true, selected == "AVSUBTITLES");
+            if (!av_tracks.empty())
+                osd->DialogAddButton(tr("Select Subtitle"),
+                                     "DIALOG_MENU_AVSUBTITLES_0",
+                                     true, selected == "AVSUBTITLES");
         }
         if (havetext || !text_tracks.empty())
         {
@@ -11248,7 +11249,7 @@ void TV::FillOSDMenuNavigate(const PlayerContext *ctx, OSD *osd,
         currenttext = tr("Angle");
         int current_angle = GetCurrentAngle(ctx);
 
-        for (int i = 0; i < num_angles; i++)
+        for (int i = 1; i <= num_angles; i++)
         {
             QString angleIdx = QString("%1").arg(i, 3, 10, QChar(48));
             QString desc = GetAngleName(ctx, i);
