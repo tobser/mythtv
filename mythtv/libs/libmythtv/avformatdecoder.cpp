@@ -354,6 +354,8 @@ AvFormatDecoder::AvFormatDecoder(MythPlayer *parent,
 
     cc608_build_parity_table(cc608_parity_table);
 
+    m_h264_parser->use_I_forKeyframes(false);
+
     LOG(VB_PLAYBACK, LOG_DEBUG, LOC + QString("PlayerFlags: 0x%1")
         .arg(playerFlags, 0, 16));
 }
@@ -2833,6 +2835,15 @@ void AvFormatDecoder::HandleGopStart(
             PosMapEntry entry = {framesRead, framesRead, startpos};
 
             QMutexLocker locker(&m_positionMapLock);
+            // Create a dummy positionmap entry for frame 0 so that
+            // seeking will work properly.  (See
+            // DecoderBase::FindPosition() which subtracts
+            // DecoderBase::indexOffset from each frame number.)
+            if (m_positionMap.empty())
+            {
+                PosMapEntry dur = {0, 0, 0};
+                m_positionMap.push_back(dur);
+            }
             m_positionMap.push_back(entry);
         }
 
