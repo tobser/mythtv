@@ -11,6 +11,7 @@
 #include <mythpluginapi.h>
 #include <mythversion.h>
 #include <mythmainwindow.h>
+#include <dbutil.h>
 
 // teatime headers
 #include "teatimeui.h"
@@ -30,6 +31,74 @@ static void setupKeys(void)
 
     LOG_Tea(LOG_INFO, "Registered JumpPoint");
 }
+
+static bool CreateTable(MSqlQuery query)
+{
+    bool success = query.exec(
+            "CREATE TABLE IF NOT EXISTS `teatime` ("
+            "   `message_text` text,"
+            "   `timer_type` enum('date_time','time_span') DEFAULT NULL,"
+            "   `run_date_time` timestamp NULL DEFAULT NULL,"
+            "   `time_span` time DEFAULT NULL,"
+            "   `system_key_events` text,"
+            "   `jump_points` text,"
+            "   `pause_playback` enum('no','yes') DEFAULT NULL,"
+            "   `countdown_seconds` int(11) DEFAULT NULL "
+            "   COMMENT 'stores timer data for the teatime plugin'"
+            " ) ENGINE=MyISAM DEFAULT CHARSET=utf8"
+            );
+
+    if (!success)
+    {
+        LOG_Tea(LOG_WARNING, "Could not create initial teatime table");
+        return false;
+    }
+
+    gCoreContext->SaveSetting("TeatimeDBSchemaVer", "1");
+
+    query.exec(
+            "INSERT INTO `mythconverg`.`teatime` "
+            "   (`message_text`, `timer_type`, `time_span`, `pause_playback`) "
+            "   VALUES "
+            "   ( 'Tea is ready!', 'time_span', '00:05:00', 'yes')"
+            );
+
+    return true;
+}
+
+static bool updateDb()
+{
+    MSqlQuery query(MSqlQuery::InitCon());
+    if (!DBUtil::TryLockSchema(query, 60))
+    {
+        LOG_Tea(LOG_WARNING, "Could not get db schema lock.");
+        return false;
+    }
+
+    int dbVer =  gCoreContext->GetSetting("TeatimeDBSchemaVer", "0").toInt();
+
+    bool success = true;
+    switch(dbVer)
+    {
+        case 0:
+            {
+                if (!CreateTable(query))
+                {
+                    success = false;
+                    break;
+                }
+
+            }
+    }
+
+    DBUtil::UnlockSchema(query);
+
+    return success;
+
+}
+
+
+
 static void openTimeSetter(void)
 {
     MythScreenStack *popupStack = GetMythMainWindow()->GetMainStack();
@@ -65,6 +134,12 @@ int mythplugin_init(const char *libversion)
     if (!gContext->TestPopupVersion("mythteatime",
         libversion, MYTH_BINARY_VERSION))
         return -1;
+
+    if (!updateDb())
+    {
+        //ToDo: annoy user with error popup
+    }
+
 
     setupKeys();
 
