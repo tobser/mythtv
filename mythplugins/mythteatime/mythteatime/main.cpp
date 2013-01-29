@@ -36,6 +36,8 @@ static bool CreateTable(MSqlQuery query)
 {
     bool success = query.exec(
             "CREATE TABLE IF NOT EXISTS `teatime` ("
+            "   `id` INT NOT NULL AUTO_INCREMENT, "
+            "   PRIMARY KEY(`id`), "
             "   `message_text` text,"
             "   `timer_type` enum('date_time','time_span') DEFAULT NULL,"
             "   `run_date_time` timestamp NULL DEFAULT NULL,"
@@ -68,6 +70,7 @@ static bool CreateTable(MSqlQuery query)
 
 static bool updateDb()
 {
+    LOG_Tea(LOG_INFO, "Checking DB state.");
     MSqlQuery query(MSqlQuery::InitCon());
     if (!DBUtil::TryLockSchema(query, 60))
     {
