@@ -19,8 +19,8 @@ installfiles.files = teatime-ui.xml
 INSTALLS += uifiles
 
 # Input
-HEADERS += teatimeui.h teatimeuisettings.h teatimedata.h 
-SOURCES += main.cpp teatimeui.cpp teatimedata.cpp teatimeuisettings.cpp
+HEADERS += teatimeui.h teatimeuisettings.h data.h
+SOURCES += main.cpp teatimeui.cpp data.cpp teatimeuisettings.cpp
 
 macx {
     QMAKE_LFLAGS += -flat_namespace -undefined suppress

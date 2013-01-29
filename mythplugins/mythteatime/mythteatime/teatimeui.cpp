@@ -13,7 +13,7 @@
 // MythTeaTime headers
 #include "teatimeui.h"
 #include "teatimeuisettings.h"
-#include "teatimedata.h"
+#include "data.h"
 
 TeaTime::TeaTime(MythScreenStack *parent, TeaTimeData* tt):
     MythScreenType(parent, "teatime"),

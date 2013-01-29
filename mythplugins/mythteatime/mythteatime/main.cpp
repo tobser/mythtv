@@ -15,7 +15,7 @@
 
 // teatime headers
 #include "teatimeui.h"
-#include "teatimedata.h"
+#include "data.h"
 
 using namespace std;
 
@@ -97,7 +97,6 @@ static bool updateDb()
     DBUtil::UnlockSchema(query);
 
     return success;
-
 }
 
 
@@ -148,8 +147,16 @@ int mythplugin_init(const char *libversion)
 
     MythMainWindow *mainWin = GetMythMainWindow();
     gTeaData = new TeaTimeData(mainWin);
-    LOG_Tea(LOG_INFO, "Teatime plugin started.");
-    return 0;
+    if (gTeaData->initialize())
+    {
+        LOG_Tea(LOG_INFO, "Teatime plugin started.");
+        return 0;
+    }
+    else
+    {
+        LOG_Tea(LOG_WARNING, "Failed to init TeaTimeData.");
+        return -1;
+    }
 }
 
 int mythplugin_run(void)
