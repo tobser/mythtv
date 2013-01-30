@@ -2,22 +2,30 @@
 #define MYTH_TIMER_DATA_H
 
 #include <QString>
+#include <QVariant>
 #include <QTime>
 
+class TeaAction{
+    public:
+        QString Action_Type;
+        QString Action_Data;
+};
 
-enum TimerType { Time_Span , Date_Time };
+
 class TimerData {
     public:
-        bool isExpired(void);
+        TimerData(int id);
+        bool init(void);
+        bool isActive(void);
+        void execute(void);
         QString toString(void);
 
         int Id;
         QString Message_Text;
-        TimerType Type;
+        QDateTime Exec_Date_Time;
         QDateTime Date_Time;
         QTime   Time_Span;
-        QString Key_Events;
-        QString Jump_Points;
+        QList<TeaAction> Exec_Actions;
         bool Pause_Playback;
         int Count_Down;
 

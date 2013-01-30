@@ -3,6 +3,7 @@
 
 // MythTV headers
 
+#include <mythcontext.h>
 #include <mythscreentype.h>
 #include <mythuibutton.h>
 #include <mythuispinbox.h>

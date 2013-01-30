@@ -31,6 +31,7 @@ class TeaTimeData :public QObject
         MythMainWindow *m_MainWindow;
         QTimer  * m_Timer;
         QMap<int, TimerData *> m_Timers;
+        QList<TimerData *> m_ActiveTimers;
 };
 
 

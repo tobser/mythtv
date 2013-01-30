@@ -35,24 +35,43 @@ static void setupKeys(void)
 static bool CreateTable(MSqlQuery query)
 {
     bool success = query.exec(
-            "CREATE TABLE IF NOT EXISTS `teatime` ("
-            "   `id` INT NOT NULL AUTO_INCREMENT, "
-            "   PRIMARY KEY(`id`), "
-            "   `message_text` text,"
-            "   `timer_type` enum('date_time','time_span') DEFAULT NULL,"
-            "   `run_date_time` timestamp NULL DEFAULT NULL,"
-            "   `time_span` time DEFAULT NULL,"
-            "   `system_key_events` text,"
-            "   `jump_points` text,"
+            " CREATE TABLE IF NOT EXISTS `teatime`  ("
+            "   `id` MEDIUMINT NOT NULL AUTO_INCREMENT,"
+            "    PRIMARY KEY(`id`),"
+            "   `message_text` text,  "
+            "   `exec_date_time` timestamp NULL DEFAULT NULL "
+            "        COMMENT 'time the timer actions will be executed',"
+            "   `date_time` timestamp NULL DEFAULT NULL "
+            "       COMMENT 'Either this or time_span have to contain valid data',"
+            "   `time_span` time DEFAULT NULL "
+            "       COMMENT 'Either this or date_time have to contain valid data',"
             "   `pause_playback` enum('no','yes') DEFAULT NULL,"
-            "   `countdown_seconds` int(11) DEFAULT NULL "
-            "   COMMENT 'stores timer data for the teatime plugin'"
+            "   `countdown_seconds` int(11) DEFAULT NULL"
             " ) ENGINE=MyISAM DEFAULT CHARSET=utf8"
+            "    COMMENT 'stores timer data for the teatime plugin';"
             );
 
     if (!success)
     {
         LOG_Tea(LOG_WARNING, "Could not create initial teatime table");
+        LOG_Tea(LOG_WARNING, query.lastError().text());
+        return false;
+    }
+
+    success = query.exec(
+            " CREATE TABLE IF NOT EXISTS `teatime_rundata`  ("
+            " 	`timer_id` MEDIUMINT NOT NULL,   "
+            " 	`run_order` TINYINT NOT NULL,"
+            " 	`type` enum('jump_point','system_key_event') NOT NULL,"
+            " 	`data` text NOT NULL"
+            " ) ENGINE=MyISAM DEFAULT CHARSET=utf8 "
+            "   COMMENT 'stores what shall be executed and in which order when the timer is expired'"
+            " ;"
+            );
+    if (!success)
+    {
+        LOG_Tea(LOG_WARNING, "Could not create initial teatime_rundata table");
+        LOG_Tea(LOG_WARNING, query.lastError().text());
         return false;
     }
 
@@ -60,9 +79,9 @@ static bool CreateTable(MSqlQuery query)
 
     query.exec(
             "INSERT INTO `mythconverg`.`teatime` "
-            "   (`message_text`, `timer_type`, `time_span`, `pause_playback`) "
+            "   (`message_text`, `time_span`, `pause_playback`) "
             "   VALUES "
-            "   ( 'Tea is ready!', 'time_span', '00:05:00', 'yes')"
+            "   ( 'Tea is ready!', '00:05:00', 'yes')"
             );
 
     return true;

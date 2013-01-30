@@ -1,24 +1,21 @@
 #include "data.h"
+#include "timerdata.h"
 #include "teatimeui.h"
 
 #include <mythlogging.h>
-#include <mythevent.h>
-#include <mythcontext.h>
-#include <mythevent.h>
 #include <dbutil.h>
 
-#include <QCoreApplication>
 
 TeaTimeData::TeaTimeData(MythMainWindow *mainWin)
     :m_MainWindow(mainWin), 
     m_Timer(NULL)
 {
 }
- bool TeaTimeData::initialize(void)
+bool TeaTimeData::initialize(void)
  {
     LOG_Tea(LOG_INFO, "Loading timers from DB");
     MSqlQuery query(MSqlQuery::InitCon());
-    bool success = query.exec("SELECT * from `teatime`");
+    bool success = query.exec("SELECT id from `teatime`");
     if (!success)
     {
         LOG_Tea(LOG_WARNING, "Could not read timers from DB.");
@@ -27,33 +24,18 @@ TeaTimeData::TeaTimeData(MythMainWindow *mainWin)
 
     while(query.next())
     {
-        TimerData* d = new TimerData;
-        d->Id = query.value(0).toInt();
-        d->Message_Text= query.value(1).toString();
-        if (query.value(2).toString() == "time_span")
-        {
-            d->Type = Time_Span; 
-        }
-        else
-        {
-            d->Type = Date_Time; 
-        }
-        
-       LOG_Tea( LOG_INFO, query.value(3).toString());
-       d->Date_Time = QDateTime::fromString(query.value(3).toString());
-        
-       d->Time_Span =  QTime::fromString(query.value(4).toString(),
-                                            "hh:mm:ss");
-       d->Key_Events = query.value(5).toString();
-       d->Jump_Points = query.value(6).toString();
-
-       d->Pause_Playback = (query.value(7).toString() == "yes");
-       d->Count_Down = query.value(8).toInt();
-       m_Timers.insert(d->Id, d);
-       LOG_Tea(LOG_INFO, d->toString());
+        int tId = query.value(0).toInt();
+        TimerData* d = new TimerData(tId);
+        d->init();
+        m_Timers.insert(d->Id, d);
+        LOG_Tea(LOG_INFO, d->toString());
+        if (d->isActive())
+            m_ActiveTimers << d;
     }
 
-    startTimer();
+    if (!m_ActiveTimers.isEmpty())
+        startTimer();
+
     return true;
  }
 
@@ -69,6 +51,7 @@ void TeaTimeData::startTimer(void)
     else
     {    
         m_Timer->start(1000);
+        LOG_Tea(LOG_INFO, "Timer started.");
     }
 }
 
@@ -77,38 +60,26 @@ void TeaTimeData::done()
 {
     LOG_Tea(LOG_INFO, "timout!");
 
-    QMapIterator<int,TimerData*> it(m_Timers);
+    QMutableListIterator<TimerData*> it(m_ActiveTimers);
     while(it.hasNext())
     {
-        it.next();
-        TimerData *td = it.value();
-        if (td->isExpired())
-            LOG_Tea(LOG_INFO, QString("Done: ").append(td->toString()));
+        TimerData *val = it.next();
+        if (val->isActive())
+        {
+            LOG_Tea(LOG_INFO, QString("not yet: ").append(val->toString()));
+        }
         else
-            LOG_Tea(LOG_INFO, QString("not yet: ").append(td->toString()));
-
+        {
+            LOG_Tea(LOG_INFO, QString("Done: ").append(val->toString()));
+            val->execute();
+            it.remove();
+        }
     }
 
-    /*// popup
-    QString notifyText =  gCoreContext->GetSetting("Teatime_NotificationText", 
-                                                    tr("Tea is ready!"));
-    bool pause =  gCoreContext->GetSetting("Teatime_PausePlayback", 
-                                                    "1") == "1";
- 
-    QStringList sl ;
-    if (pause)
-        sl << "pauseplayback"; 
-
-    MythEvent* me = new MythEvent(MythEvent::MythUserMessage, notifyText, sl);
-    QCoreApplication::instance()->postEvent(m_MainWindow, me);
-
-    QString sys_event = QString("LOCAL_SYSTEM_EVENT EventCmdKey01");
-    MythEvent* me2 = new MythEvent(MythEvent::MythEventMessage,sys_event);
-    QCoreApplication::instance()->postEvent(m_MainWindow, me2);
-    LOG_Tea(LOG_INFO, QString("Positing ").append(sys_event));
-
-    stopTimer();
-    */
+    if (m_ActiveTimers.isEmpty())
+    {
+        stopTimer();
+    }
 }
 
 void TeaTimeData::stopTimer()
@@ -121,5 +92,6 @@ void TeaTimeData::stopTimer()
         }
         delete m_Timer;        
         m_Timer = NULL;
+        LOG_Tea(LOG_INFO, "Timer stopped.");
     }
 }
