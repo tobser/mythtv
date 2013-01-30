@@ -65,11 +65,6 @@ bool TeaTime::Create(void)
     m_TimeSpinbox->SetValue(minutes);
     m_TimeSpinbox->SetVisible(true);
 
-    if (m_TimeData->hasActiveTimer())
-    {
-        startTimer(100);
-    }
-
     BuildFocusList();
 
     return true;
@@ -78,7 +73,6 @@ bool TeaTime::Create(void)
 void TeaTime::OkClicked()
 {
     int minutes = m_TimeSpinbox->GetValue().toInt();
-    m_TimeData->startTimer(minutes * 60);
     gCoreContext->SaveSetting("Teatime_Minutes", QString("%1").arg( minutes ));
     Close();
 }
@@ -101,17 +95,4 @@ void TeaTime::Setup()
 
 void TeaTime::timerEvent(QTimerEvent *event)
 {
-    if (m_TimeData->hasActiveTimer())
-    {
-        m_InfoText->SetText(QString(tr("Timer already running (%1 seconds).\n"
-                                    "Set a new value to discard the current "
-                                    "and start a new timer. Set timer to 0 "
-                                    "to discard the current timer."))
-                                    .arg(m_TimeData->GetRemainingSeconds()));
-    }
-    else
-    {
-        m_InfoText->SetText(tr("Please select a timeout value.")); // reset to default value
-        killTimer(event->timerId());
-    }
 }

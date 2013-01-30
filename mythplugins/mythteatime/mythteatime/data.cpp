@@ -11,8 +11,7 @@
 
 TeaTimeData::TeaTimeData(MythMainWindow *mainWin)
     :m_MainWindow(mainWin), 
-    m_Timer(NULL),
-    m_TimerMilliSecs(0)
+    m_Timer(NULL)
 {
 }
  bool TeaTimeData::initialize(void)
@@ -28,46 +27,48 @@ TeaTimeData::TeaTimeData(MythMainWindow *mainWin)
 
     while(query.next())
     {
-        TimerData d;
-        d.Id = query.value(0).toInt();
-        d.Message_Text= query.value(1).toString();
+        TimerData* d = new TimerData;
+        d->Id = query.value(0).toInt();
+        d->Message_Text= query.value(1).toString();
         if (query.value(2).toString() == "time_span")
-            d.Type == Time_Span; 
+        {
+            d->Type = Time_Span; 
+        }
         else
-            d.Type == Date_Time; 
+        {
+            d->Type = Date_Time; 
+        }
+        
+       LOG_Tea( LOG_INFO, query.value(3).toString());
+       d->Date_Time = QDateTime::fromString(query.value(3).toString());
+        
+       d->Time_Span =  QTime::fromString(query.value(4).toString(),
+                                            "hh:mm:ss");
+       d->Key_Events = query.value(5).toString();
+       d->Jump_Points = query.value(6).toString();
 
-      //  d.Date_Time = QDateTime(query.value(3).toString());
-      //  d.Time_Span = QTime(query.value(4).toInt());
-       d.Key_Events = query.value(5).toString();
-       d.Jump_Points = query.value(6).toString();
-
-       d.Pause_Playback = (query.value(7).toString() == "yes");
-       d.Count_Down = query.value(8).toInt();
-       LOG_Tea(LOG_INFO, d.toString());
+       d->Pause_Playback = (query.value(7).toString() == "yes");
+       d->Count_Down = query.value(8).toInt();
+       m_Timers.insert(d->Id, d);
+       LOG_Tea(LOG_INFO, d->toString());
     }
-     // read all db entries and populate map
+
+    startTimer();
     return true;
  }
 
-void TeaTimeData::startTimer(int seconds)
+void TeaTimeData::startTimer(void)
 {
-    ResetTimerData();
-    if (seconds == 0)
-        return;
-
-    m_TimeoutTime = QDateTime::currentDateTime().addSecs(seconds);
-    m_TimerMilliSecs = seconds * 1000; 
-    
+    stopTimer();
 
     m_Timer = new QTimer(this);
-    m_Timer->setSingleShot(true);
     if (!connect(m_Timer, SIGNAL(timeout()), this, SLOT(done())))
     {
         LOG_Tea(LOG_WARNING, "timout signal not connected.");
     }
     else
     {    
-        m_Timer->start(m_TimerMilliSecs);
+        m_Timer->start(1000);
     }
 }
 
@@ -76,7 +77,19 @@ void TeaTimeData::done()
 {
     LOG_Tea(LOG_INFO, "timout!");
 
-    // popup
+    QMapIterator<int,TimerData*> it(m_Timers);
+    while(it.hasNext())
+    {
+        it.next();
+        TimerData *td = it.value();
+        if (td->isExpired())
+            LOG_Tea(LOG_INFO, QString("Done: ").append(td->toString()));
+        else
+            LOG_Tea(LOG_INFO, QString("not yet: ").append(td->toString()));
+
+    }
+
+    /*// popup
     QString notifyText =  gCoreContext->GetSetting("Teatime_NotificationText", 
                                                     tr("Tea is ready!"));
     bool pause =  gCoreContext->GetSetting("Teatime_PausePlayback", 
@@ -94,10 +107,11 @@ void TeaTimeData::done()
     QCoreApplication::instance()->postEvent(m_MainWindow, me2);
     LOG_Tea(LOG_INFO, QString("Positing ").append(sys_event));
 
-    ResetTimerData();
+    stopTimer();
+    */
 }
 
-void TeaTimeData::ResetTimerData()
+void TeaTimeData::stopTimer()
 {
     if (m_Timer != NULL)
     {
@@ -108,11 +122,4 @@ void TeaTimeData::ResetTimerData()
         delete m_Timer;        
         m_Timer = NULL;
     }
-
-    m_TimerMilliSecs = 0;
-}
-QString TimerData::toString(void)
-{
-    return QString ("TimerData[id=%1, text=%2, type=%3]").arg(Id)
-        .arg(Message_Text);
 }
