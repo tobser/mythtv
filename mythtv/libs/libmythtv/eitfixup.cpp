@@ -208,13 +208,13 @@ void EITFixUp::FixDeKabelBW ( DBEventEIT& event ) const
       event.originalairdate.setDate(year.toInt(),0,0);
 
 
-    if( t_orig != event.title || s_orig != event.subtitle || e_orig != event.partnumber || presLog != "" || year != "")
-    {
-        LOG(VB_GENERAL, LOG_INFO, in );
-        LOG(VB_GENERAL, LOG_INFO, ch + QString("OUT : TITLE='" + event.title
-                    + "' SUBTITLE='"+ event.subtitle+"' E: %1 - "+ total).arg(event.partnumber)
-                    + " P:" +presLog +" D: " + event.originalairdate.toString());
-    }
+   //  if( t_orig != event.title || s_orig != event.subtitle || e_orig != event.partnumber || presLog != "" || year != "")
+   //  {
+   //      LOG(VB_GENERAL, LOG_INFO, in );
+   //      LOG(VB_GENERAL, LOG_INFO, ch + QString("OUT : TITLE='" + event.title
+   //                  + "' SUBTITLE='"+ event.subtitle+"' E: %1 - "+ total).arg(event.partnumber)
+   //                  + " P:" +presLog +" D: " + event.originalairdate.toString());
+   //  }
 
     QRegExp remSub("^("+ event.subtitle +")(.*)$:w");
     if (remSub.indexIn(event.description) > -1)
@@ -237,8 +237,8 @@ void EITFixUp::FixDeKabelBW ( DBEventEIT& event ) const
         event.description = event.description.remove(remCrap);
     }
 
-    LOG(VB_GENERAL, LOG_INFO, ch + "In  D: '" +  orgDesc +"'");
-    LOG(VB_GENERAL, LOG_INFO, ch + "OUT D: '"+ event.description +"'");
+    // LOG(VB_GENERAL, LOG_INFO, ch + "In  D: '" +  orgDesc +"'");
+    // LOG(VB_GENERAL, LOG_INFO, ch + "OUT D: '"+ event.description +"'");
 }
 
 void EITFixUp::FixDeKabelBWPresenter(QString &subToFix, QStringList &presenters) const
