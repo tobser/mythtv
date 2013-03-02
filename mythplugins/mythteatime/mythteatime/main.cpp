@@ -17,17 +17,13 @@
 #include "teatimeui.h"
 #include "data.h"
 
-using namespace std;
-
-
-static void openTimeSetter(void);
-
-TeaTimeData* gTeaData;
+static void openTimerScreen(void);
+TeaTimeData* gTeaData = NULL;
 
 static void setupKeys(void)
 {
-    REG_JUMPEX(QT_TRANSLATE_NOOP("MythControls", "Set a teatimer"),
-            "Opens a dialog to setup a tea timer.", "" , openTimeSetter, false);
+    REG_JUMPEX(QT_TRANSLATE_NOOP("MythControls", "Teatimer"),
+            "Opens a dialog to setup a timer.", "" , openTimerScreen, false);
 
     LOG_Tea(LOG_INFO, "Registered JumpPoint");
 }
@@ -41,12 +37,12 @@ static bool CreateTable(MSqlQuery query)
             "   `message_text` text,  "
             "   `exec_date_time` timestamp NULL DEFAULT NULL "
             "        COMMENT 'time the timer actions will be executed',"
-            "   `date_time` timestamp NULL DEFAULT NULL "
-            "       COMMENT 'Either this or time_span have to contain valid data',"
-            "   `time_span` time DEFAULT NULL "
-            "       COMMENT 'Either this or date_time have to contain valid data',"
+            "   `date_time` timestamp NULL DEFAULT NULL COMMENT 'Either this "
+                            "or time_span have to contain valid data',"
+            "   `time_span` time DEFAULT NULL COMMENT 'Either this or "
+                            "date_time have to contain valid data',"
             "   `pause_playback` enum('no','yes') DEFAULT NULL,"
-            "   `countdown_seconds` int(11) DEFAULT NULL"
+            "   `hostname` varchar(64) NOT NULL"
             " ) ENGINE=MyISAM DEFAULT CHARSET=utf8"
             "    COMMENT 'stores timer data for the teatime plugin';"
             );
@@ -62,27 +58,27 @@ static bool CreateTable(MSqlQuery query)
             " CREATE TABLE IF NOT EXISTS `teatime_rundata`  ("
             " 	`timer_id` MEDIUMINT NOT NULL,   "
             " 	`run_order` TINYINT NOT NULL,"
-            " 	`type` enum('jump_point','system_key_event') NOT NULL,"
+            " 	`type` varchar(32) NOT NULL,"
             " 	`data` text NOT NULL"
             " ) ENGINE=MyISAM DEFAULT CHARSET=utf8 "
-            "   COMMENT 'stores what shall be executed and in which order when the timer is expired'"
-            " ;"
+            "   COMMENT 'stores what shall be executed and in which order "
+                        "when the timer is expired';"
             );
     if (!success)
     {
-        LOG_Tea(LOG_WARNING, "Could not create initial teatime_rundata table");
+        LOG_Tea(LOG_WARNING, "Could not create initial teatime_rundata");
         LOG_Tea(LOG_WARNING, query.lastError().text());
         return false;
     }
 
-    gCoreContext->SaveSetting("TeatimeDBSchemaVer", "1");
-
-    query.exec(
-            "INSERT INTO `mythconverg`.`teatime` "
-            "   (`message_text`, `time_span`, `pause_playback`) "
+    gCoreContext->SaveSettingOnHost("TeatimeDBSchemaVer", "1", NULL);
+    QString q = QString("INSERT INTO `mythconverg`.`teatime` "
+            "   (`message_text`, `time_span`, `pause_playback`, `hostname`) "
             "   VALUES "
-            "   ( 'Tea is ready!', '00:05:00', 'yes')"
-            );
+            "   ( 'Tea is ready!', '00:05:00', 'yes', '%1')")
+                    .arg(gCoreContext->GetHostName());
+
+    query.exec(q);
 
     return true;
 }
@@ -109,7 +105,6 @@ static bool updateDb()
                     success = false;
                     break;
                 }
-
             }
     }
 
@@ -120,26 +115,26 @@ static bool updateDb()
 
 
 
-static void openTimeSetter(void)
+static void openTimerScreen(void)
 {
-    MythScreenStack *popupStack = GetMythMainWindow()->GetMainStack();
-    if (!popupStack)
+    MythScreenStack *st = GetMythMainWindow()->GetMainStack();
+    if (!st)
     {
-        LOG_Tea(LOG_WARNING, "Could not get PopupStack.");
+        LOG_Tea(LOG_WARNING, "Could not get main stack.");
         return;
     }
 
-    QString result = popupStack->GetLocation(true);
+    QString result = st->GetLocation(true);
     if (result.contains("Playback"))
     {
             LOG_Tea(LOG_INFO, "Can not create Teatime UI while in playback.");
             return;
     }
+
     if (result.contains("teatime"))
         return;
 
-
-    TeaTime* teatime = new TeaTime(popupStack, gTeaData);
+    TeaTime* teatime = new TeaTime(st);
     if (!teatime->Create())
     {
         LOG_Tea(LOG_WARNING, "Could not create Teatime UI.");
@@ -147,7 +142,7 @@ static void openTimeSetter(void)
         teatime = NULL;
         return;
     }
-    popupStack->AddScreen(teatime);
+    st->AddScreen(teatime);
 }
 
 int mythplugin_init(const char *libversion)
@@ -158,29 +153,25 @@ int mythplugin_init(const char *libversion)
 
     if (!updateDb())
     {
-        //ToDo: annoy user with error popup
+        //ToDo: annoy user with error popup?
     }
-
 
     setupKeys();
 
-    MythMainWindow *mainWin = GetMythMainWindow();
-    gTeaData = new TeaTimeData(mainWin);
-    if (gTeaData->initialize())
-    {
-        LOG_Tea(LOG_INFO, "Teatime plugin started.");
-        return 0;
-    }
-    else
+    gTeaData = new TeaTimeData();
+    if (!gTeaData->initialize())
     {
         LOG_Tea(LOG_WARNING, "Failed to init TeaTimeData.");
         return -1;
     }
+
+    LOG_Tea(LOG_INFO, "Teatime plugin started.");
+    return 0;
 }
 
 int mythplugin_run(void)
 {
-
+    openTimerScreen();
     return 0;
 }
 
@@ -190,3 +181,13 @@ int mythplugin_config(void)
     return 0;
 }
 
+void mythplugin_destroy(void)
+{
+    if (gTeaData)
+    {
+        gTeaData->shutdown();
+        delete gTeaData;
+        gTeaData = NULL;
+    }
+    LOG_Tea(LOG_INFO, "Teatime plugin destroyed.");
+}

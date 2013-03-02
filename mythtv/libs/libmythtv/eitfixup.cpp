@@ -126,6 +126,8 @@ EITFixUp::EITFixUp()
       m_deKabelBwModeration("(\\W+-\\W+|\\W+/\\W+)?(Moderation:?|Präsentiert von ) (.*($|.|:))"),
       m_deKabelBwSubtitle("(^.*)(: | - )(.*)$"),
       m_deKabelBwTerraX("(^Terra X\\S*):?(.*)"),
+      m_deKabelBwRemoveRepead("\\(?(Wh\\.|Wdh\\.|Wiederholung)( vo[nm] .*Uhr)?\\)?", Qt::CaseInsensitive),
+      m_deKabelBwRemoveCrap("\\(.*\\)$", Qt::CaseInsensitive,QRegExp::RegExp), // QRegExp::RegExpto make it not greedy TODO: extrac valid information about video (Stereo, Widescreen etc...
       m_deCountryNames("Afghanistan|Albanien|Algerien|Andorra|Angola|Antarktis|Antigua und Barbuda|Argentinien|Armenien|Aserbaidschan|Australien|Bahamas|Bahrain|Bangladesch|Barbados|Belarus|Belgien|Belize|Benin|Bhutan|Birma|Bolivien|Bosnien und Herzegowina|Botsuana|Brasilien|Brunei|Bulgarien|Burkina Faso|Burundi|Chile|China|Cookinseln|Costa Rica|Demokratische Republik Kongo|Deutschland|Dominica|Dominikanische Republik|Dschibuti|Dänemark|Ecuador|El Salvador|Elfenbeinküste|Eritrea|Estland|Falklandinseln|Fidschi|Finnland|Frankreich|Französisch Guayana|Föderierte Staaten von Mikronesien|Gabun|Gambia|Georgien|Ghana|Grenada|Griechenland|Großbritannien|Guatemala|Guinea|Guinea-Bissau|Guyana|Haiti|Honduras|Indien|Indonesien|Irak|Iran|Irland|Island|Israel|Italien|Jamaika|Japan|Jemen|Jordanien|Kambodscha|Kamerun|Kanada|Kap Verde|Kasachstan|Katar|Kenia|Kirgisistan|Kiribati|Kolumbien|Komoren|Kongo \\(Demokratische Republik\\)|Kongo \\(Republik\\)|Kongo|Kosovo|Kroatien|Kuba|Kuwait|Laos|Lesotho|Lettland|Libanon|Liberia|Libyen|Liechtenstein|Litauen|Luxemburg|Madagaskar|Malawi|Malaysia|Malediven|Mali|Malta|Marokko|Marshallinseln|Mauretanien|Mauritius|Mazedonien|Mexiko|Mikronesien|Moldawien|Monaco|Mongolei|Montenegro|Mosambik|Myanmar|Namibia|Nauru|Nepal|Neuseeland|Nicaragua|Niederlande|Niger|Nigeria|Nordkorea|Nordzypern|Norwegen|Oman|Pakistan|Palau|Palästina|Panama|Papua-Neuguinea|Paraguay|Peru|Philippinen|Polen|Portugal|Republik Kongo|Ruanda|Rumänien|Russland|Sahara|Sahara \\(Staat\\)|Saint Kitts und Nevis|Saint Lucia|Saint Vincent und die Grenadinen|Salomonen|Sambia|Samoa|San Marino|Saudi-Arabien|Schweden|Schweiz|Senegal|Serbien|Seychellen|Sierra Leone|Simbabwe|Singapur|Slowakei|Slowenien|Somalia|Spanien|Sri Lanka|Sudan|Surinam|Svalbard|Swasiland|Syrien|São Tomé und Príncipe|Südafrika|Südkorea|Südsudan|Tadschikistan|Taiwan|Tansania|Thailand|Timor-Leste|Togo|Tonga|Trinidad und Tobago|Tschad|Tschechien|Tunesien|Turkmenistan|Tuvalu|Türkei|USA|Uganda|Ukraine|Ungarn|Uruguay|Usbekistan|Vanuatu|Vatikan|Venezuela|Vereinigte Arabische Emirate|Vereinigte Staaten von Amerika|Vereinigtes Königreich|Vietnam|Weißrussland|Westsahara|Zentralafrikanische Republik|Zypern|Ägypten|Äquatorialguinea|Äthiopien|Österreich")
 {
 }
@@ -207,7 +209,6 @@ void EITFixUp::FixDeKabelBW ( DBEventEIT& event ) const
     if (!year.isEmpty())
       event.originalairdate.setDate(year.toInt(),0,0);
 
-
    //  if( t_orig != event.title || s_orig != event.subtitle || e_orig != event.partnumber || presLog != "" || year != "")
    //  {
    //      LOG(VB_GENERAL, LOG_INFO, in );
@@ -215,26 +216,23 @@ void EITFixUp::FixDeKabelBW ( DBEventEIT& event ) const
    //                  + "' SUBTITLE='"+ event.subtitle+"' E: %1 - "+ total).arg(event.partnumber)
    //                  + " P:" +presLog +" D: " + event.originalairdate.toString());
    //  }
-
-    QRegExp remSub("^("+ event.subtitle +")(.*)$:w");
-    if (remSub.indexIn(event.description) > -1)
+    QRegExp deKableBwRemoveSub("^("+ event.subtitle +")(.*)$:w");
+    if (deKableBwRemoveSub.indexIn(event.description) > -1)
     {
-        event.description = remSub.cap(2);
+        event.description = deKableBwRemoveSub.cap(2);
     }
 
-    QRegExp remRepead("\\(?(Wh\\.|Wdh\\.|Wiederholung)( vo[nm] .*Uhr)?\\)?", Qt::CaseInsensitive);
-    if (remRepead.indexIn(event.description) > -1 )
+    if (m_deKabelBwRemoveRepead.indexIn(event.description) > -1 )
     {
         event.previouslyshown = true;
-        event.description = event.description.remove(remRepead);
+        event.description = event.description.remove(m_deKabelBwRemoveRepead);
     }
 
     // remove leftover crap like Stereo, Widescreen... between brackets
-    QRegExp remCrap("\\(.*\\)$");
-    remCrap.setMinimal(true);
-    if (remCrap.indexIn(event.description) > -1)
+    // m_deKabelBwRemoveCrap.setMinimal(true);
+    if (m_deKabelBwRemoveCrap.indexIn(event.description) > -1)
     {
-        event.description = event.description.remove(remCrap);
+        event.description = event.description.remove(m_deKabelBwRemoveCrap);
     }
 
     // LOG(VB_GENERAL, LOG_INFO, ch + "In  D: '" +  orgDesc +"'");

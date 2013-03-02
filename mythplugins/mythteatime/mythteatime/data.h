@@ -13,28 +13,34 @@
 #include <QMap>
 
 
-
+/**
+ * @brief holds the list of timers
+ *
+ * keeps track of active timers and (re)loads them from the database
+ *
+ **/
 class TeaTimeData :public QObject
 {
     Q_OBJECT
 
     public:
-        TeaTimeData(MythMainWindow *mainWin);
+        TeaTimeData();
         bool initialize(void);
+        void shutdown(void);
+        void reInit(void);
+        QMap<int, TimerData *> m_Timers;
+        QList<TimerData *> m_ActiveTimers;
 
     public slots:
-        void done();
+        void checkTimers();
 
     private:
         void stopTimer(void);
         void startTimer(void);
-        MythMainWindow *m_MainWindow;
         QTimer  * m_Timer;
-        QMap<int, TimerData *> m_Timers;
-        QList<TimerData *> m_ActiveTimers;
 };
 
-
+extern MPUBLIC TeaTimeData* gTeaData;
 
 #endif /* MYTH_DATA_H*/
 

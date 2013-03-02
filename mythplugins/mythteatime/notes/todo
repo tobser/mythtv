@@ -1,0 +1,13 @@
+Startup:
+    1. read Database table on startup.
+    2. start timer if any timer is still active
+
+create ui:
+    overview:
+    new/edit:
+        -message
+        -times_span
+        -date_time
+        -save 
+        -save & start
+        -cancel

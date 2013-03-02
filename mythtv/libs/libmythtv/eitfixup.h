@@ -202,6 +202,8 @@ class EITFixUp
     const QRegExp m_deKabelBwModeration;
     const QRegExp m_deKabelBwSubtitle;
     const QRegExp m_deKabelBwTerraX;
+    const QRegExp m_deKabelBwRemoveRepead;
+    const QRegExp m_deKabelBwRemoveCrap;
     const QRegExp m_deCountryNames;
 
 };

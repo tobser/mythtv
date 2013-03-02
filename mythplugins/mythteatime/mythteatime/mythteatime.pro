@@ -19,8 +19,16 @@ installfiles.files = teatime-ui.xml
 INSTALLS += uifiles
 
 # Input
-HEADERS += teatimeui.h teatimeuisettings.h data.h timerdata.h
-SOURCES += main.cpp teatimeui.cpp data.cpp teatimeuisettings.cpp timerdata.cpp
+HEADERS += teatimeui.h data.h timerdata.h
+HEADERS += edittimerui.h
+SOURCES += main.cpp teatimeui.cpp data.cpp timerdata.cpp
+SOURCES += edittimerui.cpp
+
+doxy.target = doc 
+doxy.commands = doxygen Doxyfile;
+doxy.depends = 
+
+QMAKE_EXTRA_TARGETS += doxy
 
 macx {
     QMAKE_LFLAGS += -flat_namespace -undefined suppress

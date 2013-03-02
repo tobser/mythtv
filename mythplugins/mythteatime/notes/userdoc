@@ -1,0 +1,7 @@
+timers are global (not per frontend)
+    => one timer started on one frontend
+    => start a second frontend and it will be active there too
+    this is the desired behavior
+
+timers survive reboots.
+
