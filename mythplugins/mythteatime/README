@@ -11,14 +11,10 @@ make install
 
 CONFIGURATION/USAGE:
 Once the plugin is installed start mythfrontend. The Plugin registers 
-a new jump point. Go to "Setup"->"Edit Keys"->"JumpPoints"->"Set a teatimer" 
-and assign a key to the "Set a teatimer" JumpPoint and save.
-
-If you press the assigned key a window should popup. Here you can select the 
-amount of time until you want to get notified.
+a new jump point. Go to "Setup"->"Edit Keys"->"JumpPoints"->"Teatimer" 
+and assign a key to the "Teatimer" JumpPoint and save.
 
 
 KNOWN ISSUES:
  -you can only set the timer while not in playback
- -pausing playback when the timer is elapsed does not work at the moment.
 
