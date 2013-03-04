@@ -44,4 +44,15 @@
         <password>SetupPinCode</password>
     </button>
 
+    <button>
+        <type>SHUTDOWN</type>
+        <text>FIZZZzzz!</text>
+        <action>EXEC xterm -e 'echo "fizzzzzzz" |ncat 192.168.0.15 2225 ; sleep 3'</action>
+   </button>
+
+    <button>
+        <type>SHUTDOWN</type>
+        <text>Timer</text>
+        <action>JUMP Teatimer</action>
+   </button>
 </mythmenu>
